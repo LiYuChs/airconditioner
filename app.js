@@ -32,7 +32,7 @@ $('#loginForm').onsubmit=async e=>{
 function showApp(){
   $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');updateIdentity();
   $('#todayText').textContent=new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date()).toUpperCase();
-  $('#manualDate').valueAsDate=new Date();populateFilters();renderAll();startTimers();
+  setManualDefaults();populateFilters();renderAll();startTimers();
 }
 function updateIdentity(){$('#sideName').textContent=currentUser.name;$('#sideAvatar').textContent=initials(currentUser.name);$('#sideAvatar').style.background=currentUser.color;$('#greeting').textContent=`你好，${currentUser.name}`}
 function startTimers(){clearInterval(ticker);clearInterval(poller);ticker=setInterval(renderTimer,1000);poller=setInterval(sync,15000);renderTimer()}
@@ -50,11 +50,21 @@ $('#timerBtn').onclick=async()=>{
   catch(e){toast(e.message)}finally{busy=false;$('#timerBtn').disabled=false}
 };
 $('#manualForm').onsubmit=async e=>{
-  e.preventDefault();if(busy)return;const date=$('#manualDate').value,start=new Date(`${date}T${$('#manualStart').value}`),end=new Date(`${date}T${$('#manualEnd').value}`);
+  e.preventDefault();if(busy)return;const start=new Date($('#manualStart').value),end=new Date($('#manualEnd').value);
+  if(!isFinite(start)||!isFinite(end)){$('#manualError').textContent='請填寫完整的開始與結束日期時間。';return}
   if(end<=start){$('#manualError').textContent='結束時間必須晚於開始時間。';return}
-  busy=true;try{const r=await api('add',{userId:currentUser.id,token,start:start.toISOString(),end:end.toISOString(),note:$('#manualNote').value.trim()||'手動補登'});applyData(r);e.target.reset();$('#manualDate').value=date;$('#manualError').textContent='';toast('補登紀錄已新增')}
+  busy=true;try{const r=await api('add',{userId:currentUser.id,token,start:start.toISOString(),end:end.toISOString(),note:$('#manualNote').value.trim()||'手動補登'});applyData(r);e.target.reset();setManualDefaults();$('#manualError').textContent='';toast('補登紀錄已新增')}
   catch(err){$('#manualError').textContent=err.message}finally{busy=false}
 };
+function localDateTimeValue(date){
+  const pad=value=>String(value).padStart(2,'0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+function setManualDefaults(){
+  const start=new Date(),end=new Date(start.getTime()+60*60*1000);
+  start.setSeconds(0,0);end.setSeconds(0,0);
+  $('#manualStart').value=localDateTimeValue(start);$('#manualEnd').value=localDateTimeValue(end);
+}
 function renderAll(){renderTimer();renderStats();renderRecent();renderRecords()}
 function monthRecords(){const n=new Date();return data.records.filter(r=>{const d=new Date(r.start);return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()})}
 function renderStats(){const all=monthRecords(),mine=all.filter(r=>r.userId===currentUser.id);$('#myMonth').textContent=hours(mine);$('#allMonth').textContent=hours(all);$('#myCount').textContent=mine.length}
