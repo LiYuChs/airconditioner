@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#133f3b" />
+  <title>涼時｜冷氣時數管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain"></div>
+
+  <main id="loginView" class="login-shell">
+    <section class="brand-panel">
+      <div class="brand"><span class="brand-mark">涼</span><span>涼時</span></div>
+      <div class="brand-copy">
+        <p class="eyebrow">AIR-CONDITIONING LOG</p>
+        <h1>清楚記下，<br><em>每一刻</em>清涼。</h1>
+        <p>四人共享的冷氣使用時數管理。登入後即可計時、補登與查看紀錄。</p>
+      </div>
+      <div class="temperature">24°<span>舒適建議</span></div>
+    </section>
+
+    <section class="login-panel">
+      <div class="login-card">
+        <p class="step">01 / 登入</p>
+        <h2>今天是哪位使用者？</h2>
+        <p class="muted">選擇姓名，輸入個人 PIN 碼。</p>
+        <div id="userPicker" class="user-picker"></div>
+        <form id="loginForm">
+          <label for="pin">PIN 碼</label>
+          <div class="pin-row">
+            <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="current-password" required />
+            <button class="primary" type="submit">進入系統 <span>→</span></button>
+          </div>
+          <p id="loginError" class="error" role="alert"></p>
+        </form>
+        <p class="hint">初次使用預設 PIN：<strong>1234</strong></p>
+      </div>
+    </section>
+  </main>
+
+  <main id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">涼</span><span>涼時</span></div>
+      <nav>
+        <button class="nav-item active" data-page="dashboard"><span>⌁</span> 使用總覽</button>
+        <button class="nav-item" data-page="records"><span>≡</span> 使用紀錄</button>
+        <button class="nav-item" data-page="settings"><span>⚙</span> 個人設定</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div id="sideAvatar" class="avatar"></div>
+        <div><strong id="sideName"></strong><small>目前登入</small></div>
+        <button id="logoutBtn" class="icon-btn" title="登出">↗</button>
+      </div>
+    </aside>
+
+    <section class="content">
+      <header class="topbar">
+        <button id="menuBtn" class="menu-btn">☰</button>
+        <div><p id="todayText" class="eyebrow"></p><h2 id="greeting"></h2></div>
+        <div class="status-pill"><i></i> 系統正常</div>
+      </header>
+
+      <div id="dashboardPage" class="page">
+        <section class="hero-card">
+          <div>
+            <p class="eyebrow light">CURRENT SESSION</p>
+            <h3 id="timer">00:00:00</h3>
+            <p id="timerStatus">尚未開始使用冷氣</p>
+          </div>
+          <button id="timerBtn" class="timer-btn"><span>▶</span><b>開始計時</b><small>記錄本次使用</small></button>
+          <div class="air-lines"><i></i><i></i><i></i></div>
+        </section>
+
+        <section class="stats-grid">
+          <article><p>我的本月時數</p><strong id="myMonth">0.0</strong><span>小時</span></article>
+          <article><p>全員本月時數</p><strong id="allMonth">0.0</strong><span>小時</span></article>
+          <article><p>我的使用次數</p><strong id="myCount">0</strong><span>次</span></article>
+        </section>
+
+        <div class="two-col">
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">RECENT ACTIVITY</p><h3>近期紀錄</h3></div><button class="text-btn" data-goto="records">查看全部 →</button></div>
+            <div id="recentList" class="record-list"></div>
+          </section>
+          <section class="panel manual-card">
+            <p class="eyebrow">QUICK ENTRY</p><h3>補登使用時數</h3>
+            <form id="manualForm">
+              <label>使用日期<input id="manualDate" type="date" required /></label>
+              <div class="field-row"><label>開始時間<input id="manualStart" type="time" required /></label><label>結束時間<input id="manualEnd" type="time" required /></label></div>
+              <label>備註（選填）<input id="manualNote" maxlength="40" placeholder="例：客廳冷氣" /></label>
+              <button class="secondary" type="submit">＋ 新增紀錄</button>
+              <p id="manualError" class="error"></p>
+            </form>
+          </section>
+        </div>
+      </div>
+
+      <div id="recordsPage" class="page hidden">
+        <section class="panel wide">
+          <div class="panel-head records-head"><div><p class="eyebrow">ALL RECORDS</p><h3>使用紀錄</h3></div><div class="filters"><select id="userFilter"><option value="all">所有成員</option></select><input id="monthFilter" type="month" /></div></div>
+          <div id="allRecords" class="table-wrap"></div>
+        </section>
+      </div>
+
+      <div id="settingsPage" class="page hidden">
+        <section class="panel settings-card">
+          <p class="eyebrow">PROFILE</p><h3>個人設定</h3>
+          <form id="settingsForm">
+            <label>顯示名稱<input id="displayName" maxlength="10" required /></label>
+            <label>目前 PIN<input id="currentPin" type="password" inputmode="numeric" required /></label>
+            <label>新 PIN（4–6 位數）<input id="newPin" type="password" inputmode="numeric" minlength="4" maxlength="6" /></label>
+            <button class="secondary" type="submit">儲存變更</button>
+            <p id="settingsMessage" class="form-message"></p>
+          </form>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
