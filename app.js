@@ -65,10 +65,21 @@ function setManualDefaults(){
   start.setSeconds(0,0);end.setSeconds(0,0);
   $('#manualStart').value=localDateTimeValue(start);$('#manualEnd').value=localDateTimeValue(end);
 }
-function renderAll(){renderTimer();renderStats();renderRecent();renderRecords()}
+function renderAll(){renderTimer();renderStats();renderUsageShare();renderRecent();renderRecords()}
 function monthRecords(){const n=new Date();return data.records.filter(r=>{const d=new Date(r.start);return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()})}
 function renderStats(){const all=monthRecords(),mine=all.filter(r=>r.userId===currentUser.id);$('#myMonth').textContent=hours(mine);$('#allMonth').textContent=hours(all);$('#myCount').textContent=mine.length}
 function hours(rs){return(rs.reduce((s,r)=>s+r.end-r.start,0)/36e5).toFixed(1)}
+function renderUsageShare(){
+  const records=monthRecords(),totals=data.users.map(user=>({user,ms:records.filter(r=>r.userId===user.id).reduce((sum,r)=>sum+r.end-r.start,0)}));
+  const totalMs=totals.reduce((sum,item)=>sum+item.ms,0),bill=Math.max(0,Number($('#electricityBill').value)||0);
+  let cursor=0;const segments=totals.filter(item=>item.ms>0).map(item=>{const start=cursor;cursor+=item.ms/totalMs*100;return `${safeColor(item.user.color)} ${start}% ${cursor}%`});
+  $('#usagePie').style.background=segments.length?`conic-gradient(${segments.join(',')})`:'#e4e5df';
+  $('#pieHours').textContent=(totalMs/36e5).toFixed(1);
+  $('#usageLegend').innerHTML=totals.map(({user,ms})=>{const percent=totalMs?ms/totalMs*100:0;return `<div><i style="background:${safeColor(user.color)}"></i><span>${escapeHtml(user.name)}</span><strong>${percent.toFixed(1)}%</strong><small>${(ms/36e5).toFixed(1)} 小時</small></div>`}).join('');
+  $('#costBreakdown').innerHTML=totals.map(({user,ms})=>{const amount=totalMs?bill*ms/totalMs:0;return `<div><span><i style="background:${safeColor(user.color)}"></i>${escapeHtml(user.name)}</span><strong>${formatMoney(amount)}</strong></div>`}).join('')+(totalMs?'':'<p>本月尚無紀錄，暫時無法依比例分攤。</p>');
+}
+function safeColor(color){return /^#[0-9a-f]{6}$/i.test(color)?color:'#c8ddd5'}
+function formatMoney(value){return new Intl.NumberFormat('zh-TW',{style:'currency',currency:'TWD',minimumFractionDigits:0,maximumFractionDigits:2}).format(value)}
 function renderRecent(){const rs=data.records.filter(r=>r.userId===currentUser.id).slice(0,4);$('#recentList').innerHTML=rs.length?rs.map(recordRow).join(''):'<div class="empty">還沒有紀錄，開始第一次計時吧。</div>'}
 function recordRow(r){const d=new Date(r.start);return`<div class="record-row"><span class="record-icon">❄</span><div><strong>${escapeHtml(r.note)}</strong><small>${d.toLocaleDateString('zh-TW')}・${time(r.start)} — ${time(r.end)}</small></div><span class="record-duration">${duration(r)} 小時</span></div>`}
 function populateFilters(){const prev=$('#userFilter').value;$('#userFilter').innerHTML='<option value="all">所有成員</option>'+data.users.map(u=>`<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('');$('#userFilter').value=prev||'all';if(!$('#monthFilter').value){const n=new Date();$('#monthFilter').value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`}}
@@ -78,6 +89,8 @@ function renderRecords(){
   $$('[data-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('確定要刪除這筆紀錄嗎？')||busy)return;busy=true;try{const r=await api('delete',{userId:currentUser.id,token,id:b.dataset.delete});applyData(r);toast('紀錄已刪除')}catch(e){toast(e.message)}finally{busy=false}})
 }
 $('#userFilter').onchange=renderRecords;$('#monthFilter').onchange=renderRecords;
+try{$('#electricityBill').value=localStorage.getItem('coolHoursElectricityBill')||''}catch{}
+$('#electricityBill').oninput=()=>{try{localStorage.setItem('coolHoursElectricityBill',$('#electricityBill').value)}catch{}renderUsageShare()};
 $$('.nav-item').forEach(b=>b.onclick=()=>goPage(b.dataset.page));$$('[data-goto]').forEach(b=>b.onclick=()=>goPage(b.dataset.goto));
 function goPage(page){$$('.page').forEach(p=>p.classList.add('hidden'));$(`#${page}Page`).classList.remove('hidden');$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('.sidebar').classList.remove('open');if(page==='settings')$('#displayName').value=currentUser.name}
 $('#menuBtn').onclick=()=>$('.sidebar').classList.toggle('open');

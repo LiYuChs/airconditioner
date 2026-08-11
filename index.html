@@ -84,6 +84,14 @@
 
         <div class="two-col">
           <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">USAGE SHARE</p><h3>本月使用比例與電費</h3></div></div>
+            <div class="usage-share">
+              <div id="usagePie" class="usage-pie"><div><strong id="pieHours">0.0</strong><span>總時數</span></div></div>
+              <div id="usageLegend" class="usage-legend"></div>
+            </div>
+            <label class="electricity-field">本月總電費（元）<input id="electricityBill" type="number" min="0" step="1" inputmode="decimal" placeholder="輸入電費，例如 2400" /></label>
+            <div id="costBreakdown" class="cost-breakdown"></div>
+            <div class="section-divider"></div>
             <div class="panel-head"><div><p class="eyebrow">RECENT ACTIVITY</p><h3>近期紀錄</h3></div><button class="text-btn" data-goto="records">查看全部 →</button></div>
             <div id="recentList" class="record-list"></div>
           </section>
@@ -122,7 +130,7 @@
   </main>
 
   <div id="toast" class="toast"></div>
-  <script src="config.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="config.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
